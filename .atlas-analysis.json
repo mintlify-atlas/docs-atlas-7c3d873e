@@ -1,0 +1,52 @@
+{
+  "projectType": "frontend",
+  "projectName": "Zoho Sprints Commit Helper",
+  "projectDescription": "A Chrome extension that fetches completed tasks from Zoho Sprints and formats them for Git commit messages.",
+  "theme": "aspen",
+  "primaryColor": "#6366f1",
+  "lightColor": "#8b5cf6",
+  "darkColor": "#4f46e5",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "introduction",
+          "installation",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "Guides",
+        "pages": [
+          "guides/configuration",
+          "guides/finding-ids",
+          "guides/usage"
+        ]
+      },
+      {
+        "group": "Reference",
+        "pages": [
+          "reference/features",
+          "reference/troubleshooting",
+          "reference/privacy"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Fetch completed tasks from Zoho Sprints",
+    "Configurable settings with persistent storage",
+    "Multi-select tasks for commit messages",
+    "Auto-numbered task formatting",
+    "One-click copy to clipboard",
+    "Uses existing Zoho authentication"
+  ],
+  "publicApiSurface": [
+    "chrome.storage.local (Configuration storage)",
+    "chrome.tabs.sendMessage (Message passing)",
+    "chrome.runtime.onMessage (Content script listener)",
+    "fetchTasksFromPage() (Content script API)",
+    "Zoho Sprints API endpoint: /zsapi/team/{teamId}/projects/{projectId}/sprints/{sprintId}/item/"
+  ]
+}
