@@ -1,0 +1,190 @@
+---
+title: Finding Required IDs
+description: Step-by-step guide to finding Team ID, Project ID, Owner ID, and Done Lane ID using browser DevTools
+---
+
+## Overview
+
+The extension needs specific IDs from Zoho Sprints API calls to fetch your tasks. You can find these by inspecting network traffic in your browser's DevTools while using Zoho Sprints.
+
+## Prerequisites
+
+- Access to Zoho Sprints with an active project and sprint
+- Basic familiarity with browser DevTools
+- Chrome or Chromium-based browser
+
+## Finding Your IDs
+
+<Steps>
+  <Step title="Open Zoho Sprints">
+    Navigate to your project's sprint board at `sprints.zoho.in`. Make sure you're viewing the active sprint.
+  </Step>
+  
+  <Step title="Open DevTools">
+    Press `F12` or right-click anywhere and select "Inspect" to open Chrome DevTools.
+  </Step>
+  
+  <Step title="Open Network Tab">
+    Click on the "Network" tab in DevTools. If you see a lot of existing requests, click the clear button (circle with a line through it) to clear them.
+  </Step>
+  
+  <Step title="Trigger API Calls">
+    Interact with your sprint board:
+    - Click on a task to open it
+    - Refresh the page (`Ctrl+R` or `Cmd+R`)
+    - Switch between different views or lanes
+    
+    This will trigger API calls that you can inspect.
+  </Step>
+  
+  <Step title="Find API Requests">
+    In the Network tab, look for requests to URLs starting with:
+    ```
+    zsapi/team/
+    ```
+    
+    Filter by typing "zsapi" in the filter box to narrow down results.
+  </Step>
+  
+  <Step title="Inspect the URL">
+    Click on one of the `zsapi` requests. Look at the Request URL in the Headers tab.
+    
+    You'll see a URL structure like this:
+    ```
+    https://sprints.zoho.in/zsapi/team/60118433529/projects/13969123456722011/sprints/13939000000003001/item/?groupby=11&subitem=false&sortby=12&isascending=true&laneid=13939000000003097&lanefilter=%7B%22I-owner%22%3A%5B%2213939000000942045%22%5D%7D
+    ```
+  </Step>
+  
+  <Step title="Extract Team ID">
+    The Team ID is the number immediately after `/team/`:
+    
+    ```
+    https://sprints.zoho.in/zsapi/team/60118433529/...
+                                        ^^^^^^^^^^^
+                                        Team ID
+    ```
+    
+    **Example:** `60118433529`
+  </Step>
+  
+  <Step title="Extract Project ID">
+    The Project ID is the number after `/projects/`:
+    
+    ```
+    https://sprints.zoho.in/zsapi/team/.../projects/13969123456722011/...
+                                                     ^^^^^^^^^^^^^^^^^^
+                                                     Project ID
+    ```
+    
+    **Example:** `13969123456722011`
+  </Step>
+  
+  <Step title="Extract Sprint ID">
+    The Sprint ID is the number after `/sprints/`:
+    
+    ```
+    https://sprints.zoho.in/zsapi/team/.../sprints/13939000000003001/...
+                                                    ^^^^^^^^^^^^^^^^^^
+                                                    Sprint ID
+    ```
+    
+    **Example:** `13939000000003001`
+    
+    <Note>
+    The Sprint ID changes for each sprint, so you'll need to update this regularly.
+    </Note>
+  </Step>
+  
+  <Step title="Extract Done Lane ID">
+    Look for the `laneid=` parameter in the query string:
+    
+    ```
+    ...&laneid=13939000000003097&...
+               ^^^^^^^^^^^^^^^^^^
+               Done Lane ID
+    ```
+    
+    **Example:** `13939000000003097`
+  </Step>
+  
+  <Step title="Extract Owner ID (Your User ID)">
+    Look for the `lanefilter` parameter. It contains URL-encoded JSON. The Owner ID is within the `I-owner` array:
+    
+    ```
+    ...&lanefilter=%7B%22I-owner%22%3A%5B%2213939000000942045%22%5D%7D
+    ```
+    
+    Decoded, this looks like:
+    ```json
+    {"I-owner":["13939000000942045"]}
+                 ^^^^^^^^^^^^^^^^^^
+                 Owner ID (Your User ID)
+    ```
+    
+    **Example:** `13939000000942045`
+    
+    <Note>
+    You can paste the URL-encoded value into a URL decoder tool or look at the "Decoded" view in DevTools.
+    </Note>
+  </Step>
+</Steps>
+
+## API URL Structure
+
+The extension builds its API request using this exact URL pattern from `popup.js`:
+
+```javascript
+const url = `https://sprints.zoho.in/zsapi/team/${config.teamId}/projects/${config.projectId}/sprints/${sprintId}/item/?groupby=11&subitem=false&sortby=12&isascending=true&laneid=${config.doneLaneId}&lanefilter=%7B%22I-owner%22%3A%5B%22${config.ownerId}%22%5D%7D&range=50&action=data&index=1`;
+```
+
+## Tips for Finding IDs
+
+<Tabs>
+  <Tab title="Quick Method">
+    1. Open DevTools Network tab
+    2. Filter by "zsapi"
+    3. Refresh the sprint board page
+    4. Look for requests with `/item/` in the path
+    5. Copy the entire URL and extract all IDs at once
+  </Tab>
+  
+  <Tab title="Verify IDs">
+    After extracting IDs, verify they're correct:
+    
+    1. Open the extension and enter all IDs
+    2. Click "Fetch Done Tasks"
+    3. If you get an error, double-check your IDs
+    4. If you see tasks, your IDs are correct!
+  </Tab>
+  
+  <Tab title="Team Sharing">
+    When sharing with your team:
+    
+    - **Same for everyone:** Team ID, Project ID, Done Lane ID
+    - **Different per person:** Owner ID (each team member needs their own)
+    - **Changes regularly:** Sprint ID (update each sprint)
+  </Tab>
+</Tabs>
+
+## Troubleshooting
+
+### Can't Find zsapi Requests
+
+If you don't see any `zsapi` requests:
+
+1. Make sure you're on `sprints.zoho.in`
+2. Clear the Network tab and refresh the page
+3. Try clicking on different tasks or switching sprint views
+4. Check that you're logged in to Zoho Sprints
+
+### Wrong Tasks Appearing
+
+- **Owner ID is incorrect** - You're seeing someone else's tasks
+- **Done Lane ID is incorrect** - You're seeing tasks from wrong status column
+- **Sprint ID is incorrect** - You're seeing tasks from a different sprint
+
+### No Tasks Found
+
+- Verify you actually have completed tasks in the current sprint
+- Double-check all five IDs are correct
+- Make sure you're using the current Sprint ID, not an old one

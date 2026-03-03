@@ -1,0 +1,253 @@
+---
+title: Using the Extension
+description: Learn how to fetch, select, and copy completed tasks for your Git commit messages
+---
+
+## Overview
+
+Once configured, the extension makes it easy to fetch your completed tasks from Zoho Sprints and format them for Git commits. Tasks are automatically sorted by completion date and formatted as a numbered list.
+
+## Fetching Tasks Workflow
+
+<Steps>
+  <Step title="Open the extension">
+    Navigate to any page on `sprints.zoho.in` and click the extension icon.
+    
+    <Warning>
+    The extension must be opened while on `sprints.zoho.in` to access your authenticated session.
+    </Warning>
+  </Step>
+  
+  <Step title="Enter Sprint ID">
+    In the "Sprint ID" field, enter your current sprint's ID. This value is saved automatically when you change it.
+    
+    <Note>
+    You only need to update this when switching to a new sprint. The extension remembers your last Sprint ID.
+    </Note>
+  </Step>
+  
+  <Step title="Fetch tasks">
+    Click the "⚡ Fetch Done Tasks" button. The extension will:
+    
+    1. Validate all settings are configured
+    2. Build the API URL using your settings
+    3. Send a request to Zoho Sprints API via the content script
+    4. Parse and sort the tasks by completion date
+  </Step>
+  
+  <Step title="Select tasks">
+    Choose which tasks to include in your commit by:
+    
+    - Clicking individual task checkboxes
+    - Clicking on the task item itself to toggle selection
+    - Using the "Select All" button to toggle all tasks
+  </Step>
+  
+  <Step title="Copy to clipboard">
+    Once you've selected at least one task, the "📋 Copy Selected Tasks" button becomes enabled. Click it to copy the formatted list to your clipboard.
+  </Step>
+  
+  <Step title="Paste in commit message">
+    Switch to your terminal or Git client and paste the formatted task list into your commit message.
+  </Step>
+</Steps>
+
+## Task Sorting
+
+Tasks are automatically sorted by completion date (oldest first, newest last) using this logic from `popup.js`:
+
+```javascript
+// Sort by completedDate (oldest first, latest last)
+allTasks.sort((a, b) => {
+  const dateA = a.completedDate ? new Date(a.completedDate).getTime() : 0;
+  const dateB = b.completedDate ? new Date(b.completedDate).getTime() : 0;
+  return dateA - dateB;
+});
+```
+
+This ensures your commit message reflects the chronological order of work completion.
+
+## Task Data Structure
+
+Each task is parsed from the Zoho Sprints API response with the following structure:
+
+```javascript
+allTasks.push({
+  id: obj,
+  taskName: `${items[obj][0]}`,
+  taskId: `IQ-${items[obj][1]}`,
+  completedDate: items[obj][15], // Store completed date for sorting
+});
+```
+
+- **taskName**: The full task title
+- **taskId**: The task identifier with "IQ-" prefix
+- **completedDate**: ISO timestamp of when the task was marked done
+
+## Output Format
+
+When you click "Copy Selected Tasks", the extension formats your selected tasks as a numbered list:
+
+```javascript
+const selectedTasksList = Array.from(selectedTasks)
+  .sort((a, b) => a - b)
+  .map((index, serialNumber) => {
+    const task = allTasks[index];
+    return `${serialNumber + 1}. ${task.taskName} - ${task.taskId}`;
+  });
+
+const formattedText = selectedTasksList.join('\n');
+```
+
+### Example Output
+
+```
+1. Implement user authentication - IQ-1234
+2. Add password reset functionality - IQ-1235
+3. Fix login redirect bug - IQ-1236
+```
+
+Each line contains:
+- Sequential number (starting from 1)
+- Task name
+- Task ID in format `IQ-XXXX`
+
+## Usage Scenarios
+
+<Tabs>
+  <Tab title="Single Commit">
+    **Use case:** You completed multiple small tasks and want to commit them together.
+    
+    1. Fetch tasks from the current sprint
+    2. Select all relevant tasks (use Select All if needed)
+    3. Copy to clipboard
+    4. Create a single commit:
+    
+    ```bash
+    git add .
+    git commit -m "Complete authentication features
+    
+    1. Implement user authentication - IQ-1234
+    2. Add password reset functionality - IQ-1235
+    3. Fix login redirect bug - IQ-1236"
+    ```
+  </Tab>
+  
+  <Tab title="Selective Tasks">
+    **Use case:** You want to commit only specific tasks from your completed work.
+    
+    1. Fetch all done tasks
+    2. Click individual tasks to select only the ones for this commit
+    3. Copy selected tasks
+    4. Paste into your commit message:
+    
+    ```bash
+    git commit -m "Fix authentication bugs
+    
+    1. Fix login redirect bug - IQ-1236
+    2. Resolve session timeout issue - IQ-1240"
+    ```
+  </Tab>
+  
+  <Tab title="Pull Request Description">
+    **Use case:** Creating a PR summary for sprint work.
+    
+    1. Fetch all tasks completed in the sprint
+    2. Select all tasks
+    3. Copy to clipboard
+    4. Paste into PR description:
+    
+    ```markdown
+    ## Sprint Tasks Completed
+    
+    1. Implement user authentication - IQ-1234
+    2. Add password reset functionality - IQ-1235
+    3. Fix login redirect bug - IQ-1236
+    4. Add email verification - IQ-1237
+    5. Implement OAuth integration - IQ-1238
+    ```
+  </Tab>
+</Tabs>
+
+## Selecting and Deselecting Tasks
+
+The extension provides multiple ways to manage task selection:
+
+### Individual Selection
+
+- Click the checkbox next to a task
+- Click anywhere on the task item (not just the checkbox)
+- Selected tasks are highlighted with a blue background
+
+### Select All Toggle
+
+The "Select All" button intelligently toggles:
+
+```javascript
+document.getElementById('selectAll').addEventListener('click', () => {
+  if (selectedTasks.size === allTasks.length) {
+    selectedTasks.clear(); // Deselect all
+  } else {
+    selectedTasks.clear();
+    allTasks.forEach((_, index) => selectedTasks.add(index)); // Select all
+  }
+  renderTasks();
+});
+```
+
+- If all tasks are selected → deselects all
+- If some or none are selected → selects all
+
+## Status Messages
+
+The extension shows status messages at different stages:
+
+| Status | Message | Meaning |
+|--------|---------|----------|
+| Info | "Fetching tasks..." | Request in progress |
+| Success | "Found X task(s)" | Tasks successfully retrieved |
+| Success | "Copied X task(s) to clipboard!" | Tasks copied successfully |
+| Error | "Please configure your settings first" | Missing required settings |
+| Error | "Please enter Sprint ID" | Sprint ID field is empty |
+| Error | "Please open this extension while on sprints.zoho.in" | Wrong domain |
+
+## Authentication
+
+The extension uses your existing Zoho Sprints session through a content script that runs on `sprints.zoho.in`:
+
+```javascript
+const response = await fetch(url, {
+  method: 'GET',
+  credentials: 'same-origin',
+  headers: headers,
+});
+```
+
+Key headers automatically included:
+
+- **CSRF Token**: Extracted from cookies
+- **Session ID**: From page globals or sessionStorage
+- **x-za-ui-version**: Set to "v2"
+- **x-za-reqsize**: Set to "large"
+
+<Note>
+No API keys or passwords needed! The extension piggybacks on your active Zoho Sprints login session.
+</Note>
+
+## Troubleshooting
+
+### "No tasks found"
+
+Possible causes:
+- No tasks marked as done in the current sprint
+- Wrong Sprint ID entered
+- Wrong Done Lane ID in settings
+- Tasks not assigned to your Owner ID
+
+### "Please open this extension while on sprints.zoho.in"
+
+You must be on a `sprints.zoho.in` page for the extension to work. Open any Zoho Sprints page first.
+
+### Copy button is disabled
+
+You haven't selected any tasks yet. Click on tasks to select them, then the copy button will enable.

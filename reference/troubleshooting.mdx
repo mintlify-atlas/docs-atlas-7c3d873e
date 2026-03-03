@@ -1,0 +1,354 @@
+---
+title: Troubleshooting
+description: Common issues and solutions for Zoho Sprints Commit Helper
+---
+
+This page covers common issues you may encounter while using the Zoho Sprints Commit Helper and how to resolve them.
+
+## Common Issues
+
+<Accordion title="Error: Please open this extension while on sprints.zoho.in">
+  **Problem:** You're trying to use the extension on a different website.
+
+  **Error Message:**
+  ```
+  Please open this extension while on sprints.zoho.in
+  ```
+
+  **Why This Happens:**
+  The extension requires access to your Zoho Sprints session cookies and authentication tokens, which are only available when you're on the `sprints.zoho.in` domain.
+
+  **Solution:**
+  1. Navigate to any page on `https://sprints.zoho.in`
+  2. Make sure you're logged in to Zoho Sprints
+  3. Click the extension icon again
+
+  **Technical Details:**
+  The extension checks the active tab URL in `popup.js:121`:
+  ```javascript
+  if (!tab.url.includes('sprints.zoho.in')) {
+    showStatus(
+      'Please open this extension while on sprints.zoho.in',
+      'error'
+    );
+    return;
+  }
+  ```
+</Accordion>
+
+<Accordion title="Error: Please configure your settings first">
+  **Problem:** Required configuration settings are missing.
+
+  **Error Message:**
+  ```
+  ⚠️ Please configure your settings first
+  ```
+
+  **Why This Happens:**
+  The extension requires Team ID, Project ID, Owner ID, and Done Lane ID to fetch tasks. If any of these are missing, the extension cannot make API requests.
+
+  **Solution:**
+  1. The Settings panel will automatically open when this error appears
+  2. Fill in all required fields:
+     - Team ID
+     - Project ID
+     - Owner ID
+     - Done Lane ID
+  3. Click "Save Settings"
+  4. Try fetching tasks again
+
+  **How to Find These IDs:**
+  See the [Configuration Guide](/guides/configuration) for detailed instructions.
+
+  **Technical Details:**
+  The extension validates settings in `popup.js:95-105`:
+  ```javascript
+  if (
+    !config.teamId ||
+    !config.projectId ||
+    !config.ownerId ||
+    !config.doneLaneId
+  ) {
+    showStatus('Please configure your settings first', 'error');
+    document.getElementById('settingsPanel').style.display = 'block';
+    document.getElementById('toggleSettings').textContent = 'Hide';
+    return;
+  }
+  ```
+</Accordion>
+
+<Accordion title="Error: Please enter Sprint ID">
+  **Problem:** You clicked "Fetch Done Tasks" without entering a Sprint ID.
+
+  **Error Message:**
+  ```
+  Please enter Sprint ID
+  ```
+
+  **Solution:**
+  1. Find your Sprint ID from the Network tab (see [Finding IDs Guide](/guides/finding-ids))
+  2. Enter the Sprint ID in the input field
+  3. Click "Fetch Done Tasks" again
+
+  **Note:** Sprint ID is required for each fetch because you may want to fetch tasks from different sprints.
+
+  **Technical Details:**
+  Validation in `popup.js:82-85`:
+  ```javascript
+  if (!sprintId) {
+    showStatus('Please enter Sprint ID', 'error');
+    return;
+  }
+  ```
+</Accordion>
+
+<Accordion title="Info: No done tasks found for your user">
+  **Problem:** The API returned successfully but found no tasks matching your filters.
+
+  **Message:**
+  ```
+  No done tasks found for your user
+  ```
+
+  **Why This Happens:**
+  - You have no tasks in the Done lane for this sprint
+  - Your Owner ID is incorrect
+  - Your Done Lane ID is incorrect
+  - The sprint has no completed tasks assigned to you
+
+  **Solution:**
+  1. Verify you have tasks in the Done lane on Zoho Sprints
+  2. Double-check your Owner ID in Settings
+  3. Double-check your Done Lane ID in Settings
+  4. Try a different sprint that you know has completed tasks
+
+  **Technical Details:**
+  Check in `popup.js:166-170`:
+  ```javascript
+  if (allTasks.length === 0) {
+    showStatus('No done tasks found for your user', 'info');
+    document.getElementById('tasksContainer').style.display = 'none';
+    return;
+  }
+  ```
+</Accordion>
+
+<Accordion title="Error: No tasks found or invalid response format">
+  **Problem:** The API response doesn't contain the expected data structure.
+
+  **Error Message:**
+  ```
+  No tasks found or invalid response format
+  ```
+
+  **Why This Happens:**
+  - Zoho's API changed their response format
+  - Authentication failed silently
+  - Invalid Team ID, Project ID, or Sprint ID
+  - Network or server error
+
+  **Solution:**
+  1. Verify all your IDs are correct
+  2. Try logging out and back into Zoho Sprints
+  3. Refresh the Zoho Sprints page
+  4. Check the browser console (F12) for detailed error messages
+  5. Try again in a few minutes (might be a temporary Zoho server issue)
+
+  **Technical Details:**
+  Response validation in `popup.js:141-144`:
+  ```javascript
+  if (!data.itemJObj) {
+    showStatus('No tasks found or invalid response format', 'error');
+    return;
+  }
+  ```
+</Accordion>
+
+<Accordion title="Error: HTTP error! status: [status code]">
+  **Problem:** The API request failed with an HTTP error.
+
+  **Common Status Codes:**
+  - **401 Unauthorized:** Your session expired or authentication failed
+  - **403 Forbidden:** You don't have permission to access this resource
+  - **404 Not Found:** Invalid Team ID, Project ID, or Sprint ID
+  - **500 Internal Server Error:** Zoho server error
+
+  **Solution:**
+  
+  **For 401/403 errors:**
+  1. Log out of Zoho Sprints
+  2. Log back in
+  3. Refresh the page
+  4. Try the extension again
+
+  **For 404 errors:**
+  1. Double-check all your IDs in Settings
+  2. Verify the Sprint ID is correct
+  3. Make sure you have access to this team/project
+
+  **For 500 errors:**
+  1. Wait a few minutes
+  2. Try again
+  3. If persistent, check Zoho's status page
+
+  **Technical Details:**
+  Error handling in `content.js:78-84`:
+  ```javascript
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Error response:', errorText);
+    throw new Error(
+      `HTTP error! status: ${response.status}, body: ${errorText}`
+    );
+  }
+  ```
+</Accordion>
+
+<Accordion title="Error: Failed to copy to clipboard">
+  **Problem:** The clipboard API failed to copy the formatted tasks.
+
+  **Error Message:**
+  ```
+  Failed to copy to clipboard
+  ```
+
+  **Why This Happens:**
+  - Browser permission denied
+  - Extension lost focus
+  - Clipboard API not available
+
+  **Solution:**
+  1. Make sure the extension popup has focus
+  2. Try clicking in the extension popup first, then click Copy again
+  3. Check if your browser has disabled clipboard access
+  4. Try closing and reopening the extension popup
+
+  **Workaround:**
+  If copying continues to fail, you can view the formatted output in the browser console (F12) and copy manually.
+
+  **Technical Details:**
+  Error handling in `popup.js:266-269`:
+  ```javascript
+  try {
+    await navigator.clipboard.writeText(formattedText);
+  } catch (error) {
+    showStatus('Failed to copy to clipboard', 'error');
+    console.error('Copy error:', error);
+  }
+  ```
+</Accordion>
+
+<Accordion title="Error: Please fill in all settings fields">
+  **Problem:** You tried to save settings with some fields empty.
+
+  **Error Message:**
+  ```
+  Please fill in all settings fields
+  ```
+
+  **Why This Happens:**
+  All four configuration fields are required: Team ID, Project ID, Owner ID, and Done Lane ID.
+
+  **Solution:**
+  Fill in all four fields before clicking "Save Settings".
+
+  **Technical Details:**
+  Validation in `popup.js:54-57`:
+  ```javascript
+  if (!teamId || !projectId || !ownerId || !doneLaneId) {
+    showStatus('Please fill in all settings fields', 'error');
+    return;
+  }
+  ```
+</Accordion>
+
+## Debugging Tips
+
+<Accordion title="Check the Browser Console">
+  **How to Access:**
+  1. Right-click on the extension popup
+  2. Select "Inspect"
+  3. Go to the Console tab
+
+  **What to Look For:**
+  - Request URLs being called
+  - Authentication tokens (CSRF Token, Session ID, Source)
+  - API response data
+  - Detailed error messages
+
+  **Useful Console Logs:**
+  ```javascript
+  // From popup.js
+  console.log('Requesting URL:', url);
+  console.log('Copied to clipboard:\n', formattedText);
+
+  // From content.js
+  console.log('CSRF Token:', csrfToken);
+  console.log('Session ID:', sessionId);
+  console.log('Source:', source);
+  console.log('Request headers:', headers);
+  console.log('Response status:', response.status);
+  console.log('Success! Got data:', data);
+  ```
+</Accordion>
+
+<Accordion title="Verify Authentication Tokens">
+  **Check CSRF Token:**
+  1. Open DevTools (F12) on `sprints.zoho.in`
+  2. Go to Application → Cookies → `https://sprints.zoho.in`
+  3. Look for `CSRF_TOKEN` cookie
+  4. If missing, try logging out and back in
+
+  **Check Session ID:**
+  1. Open DevTools Console on `sprints.zoho.in`
+  2. Type: `window.ZS_GLOBAL_OBJ`
+  3. Check if `sessionId` and `source` are present
+  4. Alternatively, check sessionStorage: `sessionStorage.getItem('x-za-sessionid')`
+</Accordion>
+
+<Accordion title="Test API Call Manually">
+  You can test if your configuration works by making a manual API call:
+
+  1. Open DevTools Console on `sprints.zoho.in`
+  2. Paste this code (replace with your IDs):
+
+  ```javascript
+  const teamId = 'YOUR_TEAM_ID';
+  const projectId = 'YOUR_PROJECT_ID';
+  const sprintId = 'YOUR_SPRINT_ID';
+  const doneLaneId = 'YOUR_DONE_LANE_ID';
+  const ownerId = 'YOUR_OWNER_ID';
+
+  const url = `https://sprints.zoho.in/zsapi/team/${teamId}/projects/${projectId}/sprints/${sprintId}/item/?groupby=11&subitem=false&sortby=12&isascending=true&laneid=${doneLaneId}&lanefilter=%7B%22I-owner%22%3A%5B%22${ownerId}%22%5D%7D&range=50&action=data&index=1`;
+
+  fetch(url, {
+    credentials: 'same-origin',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      'x-za-ui-version': 'v2'
+    }
+  })
+  .then(r => r.json())
+  .then(data => console.log('API Response:', data))
+  .catch(err => console.error('API Error:', err));
+  ```
+
+  3. Check the console output for the API response
+</Accordion>
+
+## Still Having Issues?
+
+<Info>
+If you're still experiencing problems after trying these solutions:
+
+1. **Check the README:** Review the [Installation](/installation) guide
+2. **Verify Permissions:** Make sure the extension has all required permissions in `chrome://extensions`
+3. **Reload Extension:** Try disabling and re-enabling the extension
+4. **Clear Storage:** Clear the extension's local storage and reconfigure
+5. **Check Zoho Status:** Verify Zoho Sprints is working normally in your browser
+6. **Try Different Sprint:** Test with a different sprint that has known completed tasks
+</Info>
+
+<Warning>
+Remember: This extension uses **unofficial APIs** that may change at any time. If the extension suddenly stops working for everyone, Zoho may have changed their API structure.
+</Warning>

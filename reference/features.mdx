@@ -1,0 +1,270 @@
+---
+title: Features Reference
+description: Complete technical reference for all Zoho Sprints Commit Helper features
+---
+
+This page provides a comprehensive technical reference for all features in the Zoho Sprints Commit Helper Chrome extension.
+
+## Core Features
+
+<Accordion title="Fetch Done Tasks">
+  **Description:** Fetches all completed tasks assigned to you from a specific sprint in Zoho Sprints.
+
+  **Technical Details:**
+  - Makes authenticated API calls to Zoho Sprints using your existing session
+  - Filters tasks by Done Lane ID and Owner ID (your user ID)
+  - Automatically sorts tasks by completion date (oldest first)
+  - Returns task name, task ID (IQ-XXXX format), and completion date
+
+  **API Endpoint:**
+  ```javascript
+  https://sprints.zoho.in/zsapi/team/{teamId}/projects/{projectId}/sprints/{sprintId}/item/
+    ?groupby=11
+    &subitem=false
+    &sortby=12
+    &isascending=true
+    &laneid={doneLaneId}
+    &lanefilter={"I-owner":["${ownerId}"]}
+    &range=50
+    &action=data
+    &index=1
+  ```
+
+  **Requirements:**
+  - Must be on `sprints.zoho.in` domain
+  - All configuration settings must be saved (Team ID, Project ID, Owner ID, Done Lane ID)
+  - Valid Sprint ID must be provided
+</Accordion>
+
+<Accordion title="Multi-Select Tasks">
+  **Description:** Interactive task selection with checkboxes and click-to-toggle functionality.
+
+  **Technical Details:**
+  - Uses JavaScript Set to track selected task indices
+  - Each task item is clickable for easy selection
+  - Visual feedback with `selected` CSS class
+  - Checkbox state synchronized with selection state
+  - Copy button automatically disabled when no tasks are selected
+
+  **Implementation:**
+  ```javascript
+  let selectedTasks = new Set();
+  
+  function toggleTask(index) {
+    if (selectedTasks.has(index)) {
+      selectedTasks.delete(index);
+    } else {
+      selectedTasks.add(index);
+    }
+    renderTasks();
+  }
+  ```
+</Accordion>
+
+<Accordion title="Select All / Deselect All">
+  **Description:** Quick toggle to select or deselect all fetched tasks at once.
+
+  **Technical Details:**
+  - Single button toggles between select all and deselect all
+  - Automatically detects current state (all selected vs. some/none selected)
+  - Clears existing selections before applying new state
+
+  **Implementation:**
+  ```javascript
+  if (selectedTasks.size === allTasks.length) {
+    selectedTasks.clear();
+  } else {
+    selectedTasks.clear();
+    allTasks.forEach((_, index) => selectedTasks.add(index));
+  }
+  ```
+</Accordion>
+
+<Accordion title="Copy to Clipboard">
+  **Description:** Formats selected tasks and copies them to your clipboard for pasting into commit messages.
+
+  **Output Format:**
+  ```
+  1. Task Name Here - IQ-1234
+  2. Another Task Name - IQ-1235
+  3. Yet Another Task - IQ-1236
+  ```
+
+  **Technical Details:**
+  - Uses Navigator Clipboard API (`navigator.clipboard.writeText`)
+  - Auto-numbers tasks sequentially (1, 2, 3...)
+  - Maintains chronological order (sorted by completion date)
+  - Format: `{number}. {taskName} - {taskId}`
+  - Tasks are newline-separated for easy pasting
+
+  **Implementation:**
+  ```javascript
+  const selectedTasksList = Array.from(selectedTasks)
+    .sort((a, b) => a - b)
+    .map((index, serialNumber) => {
+      const task = allTasks[index];
+      return `${serialNumber + 1}. ${task.taskName} - ${task.taskId}`;
+    });
+
+  const formattedText = selectedTasksList.join('\n');
+  await navigator.clipboard.writeText(formattedText);
+  ```
+</Accordion>
+
+<Accordion title="Configurable Settings">
+  **Description:** Persistent configuration for Team ID, Project ID, Owner ID, Done Lane ID, and Sprint ID.
+
+  **Technical Details:**
+  - Settings stored in Chrome's local storage
+  - Survives browser restarts and extension updates
+  - Validation ensures all required fields are filled
+  - Sprint ID saved automatically when changed
+  - Settings panel toggles between Show/Hide states
+
+  **Stored Configuration:**
+  ```javascript
+  await chrome.storage.local.set({
+    teamId,
+    projectId,
+    ownerId,
+    doneLaneId,
+    sprintId
+  });
+  ```
+
+  **Required Fields:**
+  - Team ID
+  - Project ID
+  - Owner ID (your user ID)
+  - Done Lane ID
+
+  **Optional Fields:**
+  - Sprint ID (can be changed per fetch)
+</Accordion>
+
+<Accordion title="Authenticated API Requests">
+  **Description:** Uses your existing Zoho Sprints session to make authenticated API calls without requiring API keys.
+
+  **Technical Details:**
+  - Runs content script on `sprints.zoho.in` pages
+  - Extracts authentication tokens from page context
+  - Uses same-origin credentials for API calls
+
+  **Authentication Headers:**
+  ```javascript
+  const headers = {
+    'Accept': '*/*',
+    'X-Requested-With': 'XMLHttpRequest',
+    'x-za-ui-version': 'v2',
+    'x-za-reqsize': 'large',
+    'x-zcsrf-token': `zscp=${csrfToken}`,  // From cookies
+    'x-za-sessionid': sessionId,            // From window.ZS_GLOBAL_OBJ or sessionStorage
+    'x-za-source': source                   // From window.ZS_GLOBAL_OBJ or sessionStorage
+  };
+  ```
+
+  **Token Sources:**
+  - **CSRF Token:** Extracted from `CSRF_TOKEN` cookie
+  - **Session ID:** From `window.ZS_GLOBAL_OBJ.sessionId` or `sessionStorage['x-za-sessionid']`
+  - **Source:** From `window.ZS_GLOBAL_OBJ.source` or `sessionStorage['x-za-source']`
+
+  **Request Method:**
+  ```javascript
+  const response = await fetch(url, {
+    method: 'GET',
+    credentials: 'same-origin',
+    headers: headers
+  });
+  ```
+</Accordion>
+
+## Chrome Extension Permissions
+
+The extension requires the following permissions (from `manifest.json`):
+
+<Accordion title="activeTab">
+  **Purpose:** Access the currently active browser tab.
+
+  **Used For:**
+  - Checking if you're on `sprints.zoho.in` before making API calls
+  - Sending messages to the content script
+
+  **Security:** Only accesses the active tab when you click the extension icon.
+</Accordion>
+
+<Accordion title="scripting">
+  **Purpose:** Inject and execute the content script on Zoho Sprints pages.
+
+  **Used For:**
+  - Running `content.js` to access page cookies and session
+  - Making authenticated API requests with your Zoho session
+
+  **Security:** Only runs on pages matching `https://sprints.zoho.in/*`.
+</Accordion>
+
+<Accordion title="storage">
+  **Purpose:** Store configuration settings locally in your browser.
+
+  **Used For:**
+  - Saving Team ID, Project ID, Owner ID, Done Lane ID, Sprint ID
+  - Persisting settings between browser sessions
+
+  **Security:** All data stored locally in your browser only. Nothing is sent to external servers.
+</Accordion>
+
+<Accordion title="host_permissions: https://sprints.zoho.in/*">
+  **Purpose:** Access to Zoho Sprints domain for API calls.
+
+  **Used For:**
+  - Fetching tasks from Zoho Sprints API
+  - Extracting authentication tokens from the page
+
+  **Security:** Limited to Zoho Sprints domain only. Cannot access other websites.
+</Accordion>
+
+## Storage Mechanism
+
+All configuration is stored using **Chrome's Local Storage API**:
+
+```javascript
+// Save settings
+await chrome.storage.local.set({
+  teamId: '60118433529',
+  projectId: '13969123456722011',
+  ownerId: '701234567',
+  doneLaneId: '50123456789',
+  sprintId: '13969123456788888'
+});
+
+// Load settings
+const config = await chrome.storage.local.get([
+  'teamId',
+  'projectId',
+  'ownerId',
+  'doneLaneId',
+  'sprintId'
+]);
+```
+
+**Storage Characteristics:**
+- Persists across browser restarts
+- Survives extension updates
+- Only accessible by this extension
+- Never transmitted over the network
+- Stored locally on your computer
+
+## Task Sorting
+
+Tasks are automatically sorted by completion date:
+
+```javascript
+allTasks.sort((a, b) => {
+  const dateA = a.completedDate ? new Date(a.completedDate).getTime() : 0;
+  const dateB = b.completedDate ? new Date(b.completedDate).getTime() : 0;
+  return dateA - dateB;
+});
+```
+
+**Sort Order:** Oldest completed first → Latest completed last
+
+**Why This Matters:** Maintains chronological order of work completion, useful for accurate commit history.

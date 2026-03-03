@@ -1,0 +1,338 @@
+---
+title: Privacy & Disclaimer
+description: Privacy policy and important disclaimers for Zoho Sprints Commit Helper
+---
+
+This page covers important information about privacy, data handling, and legal disclaimers for the Zoho Sprints Commit Helper Chrome extension.
+
+## Privacy Statement
+
+<Info>
+**Your privacy is paramount.** This extension is designed with privacy-first principles.
+</Info>
+
+### What Data Is Accessed
+
+The extension accesses:
+
+1. **Your Own Tasks Only**
+   - Only fetches tasks assigned to you (filtered by your Owner ID)
+   - Only accesses tasks in the Done lane
+   - Only reads task names, task IDs, and completion dates
+
+2. **Authentication Information**
+   - CSRF token from your browser cookies (for authenticated requests)
+   - Session ID from page context or sessionStorage
+   - Source identifier from page context or sessionStorage
+
+3. **Configuration Settings**
+   - Team ID, Project ID, Owner ID, Done Lane ID, Sprint ID
+   - Stored locally in Chrome's storage API
+
+### What Data Is NOT Collected
+
+<Accordion title="No External Data Transmission">
+  **We do NOT:**
+  - Send any data to external servers
+  - Transmit your tasks or configurations anywhere
+  - Upload anything to the cloud
+  - Report usage analytics
+  - Track your activity
+
+  **Technical Proof:**
+  The extension only makes requests to:
+  ```
+  https://sprints.zoho.in/zsapi/*
+  ```
+
+  No other domains are contacted. Check the `manifest.json` file:
+  ```json
+  {
+    "host_permissions": ["https://sprints.zoho.in/*"]
+  }
+  ```
+</Accordion>
+
+<Accordion title="No Data Storage Outside Your Browser">
+  All data stays **100% local** in your browser:
+
+  - Configuration settings: Stored in `chrome.storage.local`
+  - Fetched tasks: Only in memory (RAM) while popup is open
+  - Clipboard data: Only when you explicitly click "Copy"
+
+  **Nothing persists to disk except your settings**, and those never leave your computer.
+</Accordion>
+
+<Accordion title="No Third-Party Services">
+  - No analytics services (Google Analytics, Mixpanel, etc.)
+  - No crash reporting (Sentry, Bugsnag, etc.)
+  - No CDN resources (all code is local)
+  - No external JavaScript libraries loaded at runtime
+</Accordion>
+
+<Accordion title="No Access to Other Websites">
+  The extension **only** has permissions for:
+  ```
+  https://sprints.zoho.in/*
+  ```
+
+  It cannot access:
+  - Other websites you visit
+  - Your browsing history
+  - Cookies from other domains
+  - Data from other extensions
+</Accordion>
+
+### Chrome Permissions Explained
+
+The extension requests these permissions (from `manifest.json`):
+
+```json
+{
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["https://sprints.zoho.in/*"]
+}
+```
+
+**Why Each Permission Is Needed:**
+
+| Permission | Purpose | Privacy Impact |
+|------------|---------|----------------|
+| `activeTab` | Check if you're on sprints.zoho.in | Only accesses current tab URL |
+| `scripting` | Inject content script to access your session | Only runs on sprints.zoho.in |
+| `storage` | Save your configuration settings | Stored locally, never synced |
+| `host_permissions` | Make API calls to Zoho Sprints | Only contacts sprints.zoho.in |
+
+<Note>
+No "sensitive" permissions are requested:
+- No `<all_urls>` (access to all websites)
+- No `tabs` (access to all tab information)
+- No `cookies` global permission
+- No `webRequest` (intercept network traffic)
+- No `storage.sync` (sync to Google account)
+</Note>
+
+## Unofficial API Disclaimer
+
+<Warning>
+**This extension uses unofficial Zoho Sprints APIs obtained through reverse engineering.**
+
+This is NOT an official Zoho product.
+</Warning>
+
+### What This Means
+
+<Accordion title="Not Affiliated with Zoho">
+  - This extension is **not** created by Zoho Corporation
+  - This extension is **not** endorsed by Zoho Corporation
+  - This extension is **not** supported by Zoho Corporation
+  - Zoho has no responsibility for this extension's functionality or security
+
+  **Why This Matters:**
+  If you experience issues, you cannot contact Zoho support. This is a community-developed tool.
+</Accordion>
+
+<Accordion title="Reverse Engineered APIs">
+  The extension uses internal Zoho Sprints APIs by:
+  - Observing network requests in DevTools
+  - Extracting API endpoints and parameters
+  - Mimicking the same requests the web app makes
+
+  **Technical Details:**
+  The API endpoint used is:
+  ```
+  https://sprints.zoho.in/zsapi/team/{teamId}/projects/{projectId}/sprints/{sprintId}/item/
+  ```
+
+  This is the same endpoint the official Zoho Sprints web app uses, but it is **not documented** as a public API.
+</Accordion>
+
+<Accordion title="APIs May Change Without Notice">
+  **⚠️ Important:** Zoho may change their internal APIs at any time:
+  - API endpoints could be modified
+  - Response formats could change
+  - Authentication methods could be updated
+  - Endpoints could be deprecated
+
+  **If This Happens:**
+  - The extension may stop working suddenly
+  - You will not receive advance notice
+  - Updates to the extension may be required
+  - There may be periods where the extension is broken
+
+  **This is the risk of using unofficial APIs.**
+</Accordion>
+
+<Accordion title="Use at Your Own Risk">
+  By using this extension, you understand:
+  - It may break without warning
+  - Zoho's Terms of Service may prohibit this usage
+  - Your Zoho account could theoretically be affected (though unlikely)
+  - No warranty or guarantee is provided
+
+  **Recommended Usage:**
+  - ✅ Personal use
+  - ✅ Small team use with informed consent
+  - ⚠️ Production environments (proceed with caution)
+  - ❌ Mission-critical workflows (too risky)
+</Accordion>
+
+## Terms of Service Considerations
+
+<Warning>
+**Important:** Review Zoho's Terms of Service before using this extension in production environments.
+</Warning>
+
+### Potential ToS Issues
+
+<Accordion title="Automated Access">
+  Some service providers prohibit automated access to their platforms. While this extension uses your authenticated session (you're already logged in), it does automate API requests.
+
+  **From README.md:**
+  > ⚠️ Check Zoho's Terms of Service before using in production environments
+
+  **Recommendation:**
+  - Review Zoho's Terms of Service at https://www.zoho.com/terms.html
+  - Use for personal/team productivity (not commercial exploitation)
+  - Don't use it to scrape data or bypass rate limits
+</Accordion>
+
+<Accordion title="API Usage">
+  This extension uses undocumented internal APIs. Zoho's ToS may state:
+  - Only public/documented APIs should be used
+  - Reverse engineering may be prohibited
+  - Unofficial integrations may violate terms
+
+  **Our Position:**
+  - This tool is for productivity enhancement
+  - It accesses only your own data
+  - It doesn't burden Zoho's servers excessively
+  - It's intended for personal use
+
+  **But:** Ultimately, you are responsible for ensuring your usage complies with Zoho's terms.
+</Accordion>
+
+<Accordion title="Data Access">
+  The extension accesses your Zoho Sprints data through your authenticated session. This is:
+  - ✅ Data you already have access to
+  - ✅ Your own tasks (not other people's data)
+  - ✅ Using your existing permissions
+
+  **Not:**
+  - ❌ Bypassing access controls
+  - ❌ Accessing data you shouldn't see
+  - ❌ Exploiting vulnerabilities
+</Accordion>
+
+## Recommended Use Cases
+
+### ✅ Appropriate Use
+
+- **Personal productivity:** Streamline your own workflow
+- **Team adoption:** Share with teammates who want the same productivity boost
+- **Open source:** Study the code, learn how Chrome extensions work
+- **Non-commercial:** Use for your own projects and tasks
+
+### ⚠️ Use with Caution
+
+- **Production environments:** Consider the risk of sudden breakage
+- **Large teams:** Ensure everyone understands the unofficial nature
+- **Client projects:** May not meet compliance requirements
+
+### ❌ Not Recommended
+
+- **Data scraping:** Don't use this to extract data at scale
+- **Commercial products:** Don't build paid services on top of this
+- **Mission-critical:** Don't rely on this for critical business processes
+- **Violating ToS:** Don't use this to bypass Zoho's intended usage patterns
+
+## Security Considerations
+
+<Accordion title="Open Source = Auditable">
+  **Advantage:** You can review the source code yourself.
+
+  All code is available for inspection:
+  - `manifest.json` - Permissions and configuration
+  - `popup.js` - UI logic and task handling
+  - `content.js` - Authentication and API calls
+  - `popup.html` - User interface
+  - `styles.css` - Styling
+
+  **What to Check:**
+  - No external network requests (except to sprints.zoho.in)
+  - No data exfiltration
+  - No malicious code
+  - Proper authentication handling
+</Accordion>
+
+<Accordion title="Authentication Security">
+  **How Authentication Works:**
+  1. You log into Zoho Sprints normally
+  2. Extension reads your CSRF token from cookies
+  3. Extension extracts session ID from page context
+  4. Extension includes these in API requests
+
+  **Security Notes:**
+  - Your credentials are never touched by the extension
+  - Tokens are never stored persistently
+  - All requests use `credentials: 'same-origin'`
+  - CSRF protection is maintained
+
+  **From content.js:**
+  ```javascript
+  const csrfToken = document.cookie
+    .split('; ')
+    .find((row) => row.startsWith('CSRF_TOKEN='))
+    ?.split('=')[1] || '';
+  
+  // ... later ...
+  headers['x-zcsrf-token'] = `zscp=${csrfToken}`;
+  ```
+</Accordion>
+
+<Accordion title="No Secret Storage">
+  The extension does NOT store:
+  - Passwords
+  - API keys
+  - Tokens (beyond current session)
+  - Sensitive personal information
+
+  **Only Stored:**
+  - Team ID (public identifier)
+  - Project ID (public identifier)
+  - Owner ID (your user ID)
+  - Done Lane ID (public identifier)
+  - Sprint ID (public identifier)
+
+  These IDs are not secret - they're visible in URLs and network requests on Zoho Sprints.
+</Accordion>
+
+## Summary
+
+<Info>
+**TL;DR:**
+
+✅ **Privacy:** All data stays in your browser. Nothing is collected or transmitted externally.
+
+✅ **Security:** Open source, auditable code. Uses your existing Zoho session securely.
+
+⚠️ **Unofficial:** Not affiliated with Zoho. Uses reverse-engineered APIs.
+
+⚠️ **Terms of Service:** Check Zoho's ToS before production use.
+
+⚠️ **No Warranty:** Use at your own risk. APIs may change without notice.
+
+**Recommended for:** Personal productivity and team use with informed consent.
+</Info>
+
+## Contact & Updates
+
+<Note>
+This is an open-source community project. If you have concerns or questions:
+
+- Review the source code in the extension folder
+- Check for updates and issues on the project repository
+- Use at your own discretion
+
+By using this extension, you acknowledge you understand these disclaimers and accept the risks.
+</Note>

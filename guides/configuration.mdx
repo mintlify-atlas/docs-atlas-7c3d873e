@@ -1,0 +1,120 @@
+---
+title: Configuration
+description: Learn how to configure the Zoho Sprints Commit Helper extension with required settings
+---
+
+## Overview
+
+The extension requires specific IDs from your Zoho Sprints workspace to fetch your completed tasks. All settings are stored locally in your browser using `chrome.storage.local` and persist between sessions.
+
+## Required Settings
+
+You need to configure four persistent IDs and one sprint-specific ID:
+
+### Team ID
+
+Your Zoho Sprints team identifier. This is typically a 11-digit number.
+
+**Example:** `60008432525`
+
+### Project ID
+
+The specific project you're working on. This is a longer numeric ID.
+
+**Example:** `13939000000022011`
+
+### Owner ID (Your User ID)
+
+Your personal user ID in Zoho Sprints. This filters tasks to only show ones assigned to you.
+
+**Example:** `13939000000942045`
+
+### Done Lane ID
+
+The ID of the "Done" lane/column in your sprint board. This filters tasks to only those in the completed state.
+
+**Example:** `13939000000003097`
+
+### Sprint ID
+
+The current sprint's ID. **This changes for each sprint** and needs to be updated when you start a new sprint.
+
+<Note>
+Unlike the other four settings, the Sprint ID is temporary and must be updated each time you switch to a new sprint.
+</Note>
+
+## How Settings Are Stored
+
+The extension uses Chrome's local storage API to save your configuration. When you click "Save Settings", the following code stores your values:
+
+```javascript
+await chrome.storage.local.set({
+  teamId,
+  projectId,
+  ownerId,
+  doneLaneId,
+});
+```
+
+The Sprint ID is saved separately when you change it:
+
+```javascript
+document.getElementById('sprintId').addEventListener('change', async (e) => {
+  await chrome.storage.local.set({ sprintId: e.target.value });
+});
+```
+
+## Configuration Workflow
+
+<Steps>
+  <Step title="Open the extension">
+    Click the extension icon while on any `sprints.zoho.in` page.
+  </Step>
+  
+  <Step title="Show settings panel">
+    Click the "Show" button next to "⚙️ Settings".
+  </Step>
+  
+  <Step title="Enter your IDs">
+    Fill in all four fields:
+    - Team ID
+    - Project ID
+    - Owner ID (Your User ID)
+    - Done Lane ID
+  </Step>
+  
+  <Step title="Save settings">
+    Click "Save Settings". You'll see a success message and the settings panel will collapse.
+  </Step>
+  
+  <Step title="Enter Sprint ID">
+    In the separate "Sprint ID" field above the fetch button, enter your current sprint ID.
+  </Step>
+</Steps>
+
+## Settings Validation
+
+When you load the extension, it automatically checks if all required settings are configured:
+
+```javascript
+if (
+  !config.teamId ||
+  !config.projectId ||
+  !config.ownerId ||
+  !config.doneLaneId
+) {
+  showStatus('⚠️ Please configure your settings first', 'error');
+  document.getElementById('settingsPanel').style.display = 'block';
+  document.getElementById('toggleSettings').textContent = 'Hide';
+}
+```
+
+If any required setting is missing, the settings panel automatically opens with an error message.
+
+## Finding Your IDs
+
+<Warning>
+You'll need to use browser DevTools to find these IDs. See the [Finding IDs](/guides/finding-ids) guide for detailed instructions.
+</Warning>
+
+Once configured, these settings are stored permanently in your browser and you won't need to enter them again unless you switch to a different team or project.

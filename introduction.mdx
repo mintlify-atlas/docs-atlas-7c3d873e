@@ -1,0 +1,76 @@
+---
+title: Introduction
+description: Quickly fetch and format your done tasks from Zoho Sprints for Git commit messages
+---
+
+# Zoho Sprints Commit Helper
+
+A Chrome extension that helps developers fetch completed tasks from Zoho Sprints and format them for Git commit messages. Stop manually copying task IDs and descriptions—let the extension do it for you.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="One-Click Fetch" icon="rocket">
+    Fetch all your completed tasks from a sprint with a single click. No manual searching required.
+  </Card>
+  
+  <Card title="Configurable Settings" icon="gear">
+    Set your Team ID, Project ID, Owner ID, and Done Lane ID once through the UI. No code editing needed.
+  </Card>
+  
+  <Card title="Multi-Select Tasks" icon="check-square">
+    Choose which tasks to include in your commit. Select individual tasks or use "Select All" for convenience.
+  </Card>
+  
+  <Card title="Auto-Numbering" icon="list">
+    Tasks are automatically numbered in sequence and sorted by completion date (oldest to newest).
+  </Card>
+  
+  <Card title="Copy to Clipboard" icon="clipboard">
+    Format and copy selected tasks with one click. Paste directly into your Git commit message.
+  </Card>
+  
+  <Card title="Secure & Private" icon="lock">
+    Uses your existing Zoho session. All data stays in your browser—nothing is sent externally.
+  </Card>
+</CardGroup>
+
+## How It Works
+
+1. **Configure once**: Enter your Zoho Sprints IDs (Team, Project, Owner, Done Lane) in the extension settings
+2. **Navigate to Zoho Sprints**: Open any page on `sprints.zoho.in` in your browser
+3. **Enter Sprint ID**: Type in the Sprint ID you want to fetch tasks from
+4. **Fetch tasks**: Click "Fetch Done Tasks" to retrieve your completed tasks
+5. **Select & copy**: Choose the tasks you want, then copy them to your clipboard
+6. **Paste**: Use the formatted output in your Git commit message
+
+## Output Format
+
+The extension formats tasks in a clean, numbered list:
+
+```
+1. Implement user authentication - IQ-1234
+2. Fix login page responsiveness - IQ-1235
+3. Add password reset functionality - IQ-1236
+```
+
+Tasks are sorted by completion date (oldest first, latest last) and automatically numbered based on your selection order.
+
+<Warning>
+  **Disclaimer: Unofficial API Usage**
+  
+  This extension uses unofficial Zoho Sprints APIs obtained through reverse engineering.
+  
+  - For personal/team use only
+  - Not affiliated with or endorsed by Zoho Corporation
+  - Use at your own risk—Zoho may change their APIs at any time
+  - Check Zoho's Terms of Service before using in production environments
+  
+  **Privacy:** This extension only accesses your own tasks and does not collect, store, or transmit any data outside your browser. All processing happens locally using your existing Zoho authentication.
+</Warning>
+
+## What's Next?
+
+<Card title="Get Started" icon="arrow-right" href="/installation">
+  Install the extension and configure your settings
+</Card>

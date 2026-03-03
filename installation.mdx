@@ -1,0 +1,86 @@
+---
+title: Installation
+description: Learn how to install and set up the Zoho Sprints Commit Helper Chrome extension
+---
+
+# Installation
+
+The Zoho Sprints Commit Helper is a Chrome extension that you can load as an unpacked extension. Follow these steps to get it installed and ready to use.
+
+## System Requirements
+
+- **Browser**: Google Chrome or any Chromium-based browser (Edge, Brave, etc.)
+- **Access**: Active Zoho Sprints account with access to your team's projects
+- **Developer Mode**: Ability to enable Chrome's Developer mode (required for unpacked extensions)
+
+## Installation Steps
+
+<Steps>
+  <Step title="Enable Developer Mode">
+    Open Chrome and navigate to the extensions page:
+    
+    ```
+    chrome://extensions/
+    ```
+    
+    In the top right corner, toggle on **"Developer mode"**.
+    
+    <Info>
+      Developer mode is required to load unpacked extensions. This is a standard Chrome feature and is safe to enable.
+    </Info>
+  </Step>
+  
+  <Step title="Load the Extension">
+    Click the **"Load unpacked"** button that appears after enabling Developer mode.
+    
+    Navigate to and select the folder containing the extension files:
+    - `manifest.json`
+    - `popup.html`
+    - `popup.js`
+    - `content.js`
+    - `logo.png` (optional)
+  </Step>
+  
+  <Step title="Verify Installation">
+    After loading, you should see the extension appear in your extensions list:
+    
+    - **Name**: Zoho Sprints Commit Helper
+    - **Version**: 1.0
+    - **Description**: Quickly format done tasks for commit messages
+    
+    The extension icon should now appear in your Chrome toolbar. If you don't see it, click the puzzle piece icon and pin the extension.
+  </Step>
+  
+  <Step title="Grant Permissions">
+    The extension requires the following permissions (automatically granted on installation):
+    
+    - `activeTab` - To detect when you're on sprints.zoho.in
+    - `scripting` - To run the content script on Zoho Sprints pages
+    - `storage` - To save your configuration settings locally
+    - `host_permissions: https://sprints.zoho.in/*` - To access Zoho Sprints API
+    
+    <Note>
+      These permissions are defined in `manifest.json` and are necessary for the extension to function. Your data never leaves your browser.
+    </Note>
+  </Step>
+</Steps>
+
+## First-Time Setup
+
+After installation, you'll need to configure the extension with your Zoho Sprints IDs before you can fetch tasks. The extension will prompt you to configure settings on first launch.
+
+<Info>
+  When you first click the extension icon, you'll see a warning message:
+  
+  **"⚠️ Please configure your settings first"**
+  
+  The Settings panel will automatically expand for you to enter your configuration.
+</Info>
+
+## Next Steps
+
+Now that the extension is installed, proceed to the Quick Start guide to configure your settings and fetch your first tasks.
+
+<Card title="Quick Start" icon="rocket" href="/quickstart">
+  Configure settings and fetch your first tasks
+</Card>

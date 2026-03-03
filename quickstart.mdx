@@ -1,80 +1,280 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick Start
+description: Configure the extension and create your first formatted commit message from Zoho Sprints tasks
 ---
 
-## Get started in three steps
+# Quick Start
 
-Get your documentation site running locally and make your first customization.
+This guide will walk you through configuring the Zoho Sprints Commit Helper and creating your first formatted commit message.
 
-### Step 1: Set up your local environment
+## Prerequisites
+
+- Extension installed (see [Installation](/installation))
+- Access to Zoho Sprints with at least one project
+- Chrome DevTools access (F12)
+
+## Step 1: Find Your Configuration IDs
+
+<Steps>
+  <Step title="Navigate to Zoho Sprints">
+    Open your browser and go to [sprints.zoho.in](https://sprints.zoho.in). Navigate to your project and view any sprint.
+  </Step>
+  
+  <Step title="Open Chrome DevTools">
+    Press **F12** or right-click and select **"Inspect"** to open Chrome DevTools.
+    
+    Click on the **Network** tab at the top of DevTools.
+  </Step>
+  
+  <Step title="Trigger an API Request">
+    While the Network tab is open, either:
+    - Click on any task in the sprint board, OR
+    - Refresh the page (F5)
+    
+    This will trigger API calls to Zoho's backend.
+  </Step>
+  
+  <Step title="Find the API Call">
+    In the Network tab, look for requests to URLs that start with:
+    
+    ```
+    zsapi/team/...
+    ```
+    
+    Click on one of these requests. The URL will look similar to:
+    
+    ```bash
+    https://sprints.zoho.in/zsapi/team/60008432525/projects/13939000000022011/sprints/13939000000003095/item/?groupby=11&subitem=false&sortby=12&isascending=true&laneid=13939000000003097&lanefilter=%7B%22I-owner%22%3A%5B%2213939000000942045%22%5D%7D
+    ```
+  </Step>
+  
+  <Step title="Extract the IDs">
+    From the URL, identify these four IDs:
+    
+    | ID | Example | Location in URL |
+    |----|---------|-----------------|
+    | **Team ID** | `60008432525` | After `/team/` |
+    | **Project ID** | `13939000000022011` | After `/projects/` |
+    | **Done Lane ID** | `13939000000003097` | After `laneid=` |
+    | **Owner ID** | `13939000000942045` | Inside `lanefilter` (your user ID) |
+    
+    <Note>
+      The **Owner ID** is your Zoho Sprints user ID. It appears in the `lanefilter` parameter when filtering by owner.
+    </Note>
+  </Step>
+</Steps>
+
+## Step 2: Configure Extension Settings
+
+<Steps>
+  <Step title="Open the Extension">
+    Click the extension icon in your Chrome toolbar. If this is your first time, the Settings panel will automatically be visible.
+    
+    If the panel is hidden, click the **"Show"** button under ⚙️ Settings.
+  </Step>
+  
+  <Step title="Enter Your IDs">
+    Fill in all four fields with the IDs you extracted:
+    
+    ```javascript
+    Team ID:          60008432525
+    Project ID:       13939000000022011
+    Owner ID:         13939000000942045
+    Done Lane ID:     13939000000003097
+    ```
+    
+    <Info>
+      These values are stored locally in your browser using `chrome.storage.local`. They persist across sessions, so you only need to configure them once.
+    </Info>
+  </Step>
+  
+  <Step title="Save Settings">
+    Click the **"Save Settings"** button. You should see a success message:
+    
+    ```
+    Settings saved successfully!
+    ```
+    
+    The Settings panel will automatically close.
+  </Step>
+</Steps>
+
+## Step 3: Find Your Sprint ID
+
+<Steps>
+  <Step title="Locate Sprint ID in Network Tab">
+    Still in the Network tab, look at the same API URL from earlier. The Sprint ID appears after `/sprints/`:
+    
+    ```bash
+    https://sprints.zoho.in/zsapi/team/.../sprints/13939000000003095/item/...
+                                                    ^^^^^^^^^^^^^^^^^^^^
+                                                    This is your Sprint ID
+    ```
+  </Step>
+  
+  <Step title="Copy the Sprint ID">
+    The Sprint ID changes for each sprint. You'll need to find this ID every time you want to fetch tasks from a different sprint.
+    
+    <Warning>
+      Make sure you're looking at the correct sprint! The Sprint ID in the URL corresponds to the sprint you're currently viewing in Zoho Sprints.
+    </Warning>
+  </Step>
+</Steps>
+
+## Step 4: Fetch and Copy Tasks
+
+<Steps>
+  <Step title="Enter Sprint ID">
+    In the extension popup, find the **"Sprint ID:"** field and paste your Sprint ID:
+    
+    ```javascript
+    Sprint ID: 13939000000003095
+    ```
+    
+    The extension automatically saves this value when you change it.
+  </Step>
+  
+  <Step title="Fetch Tasks">
+    Click the **"⚡ Fetch Done Tasks"** button.
+    
+    You should see a status message:
+    
+    ```
+    Fetching tasks...
+    ```
+    
+    Followed by:
+    
+    ```
+    Found X task(s)
+    ```
+    
+    <Info>
+      The extension fetches tasks from the Done lane that are assigned to you (based on your Owner ID). Tasks are sorted by completion date, oldest to newest.
+    </Info>
+    
+    <Warning>
+      If you see an error like **"Please open this extension while on sprints.zoho.in"**, make sure you're on a Zoho Sprints page when clicking the extension icon.
+    </Warning>
+  </Step>
+  
+  <Step title="Select Tasks">
+    Your completed tasks will appear in a list:
+    
+    ```
+    ☐ Implement user authentication - (IQ-1234)
+    ☐ Fix login page responsiveness - (IQ-1235)
+    ☐ Add password reset functionality - (IQ-1236)
+    ```
+    
+    Click on individual tasks to select them, or click **"Select All"** to select every task.
+    
+    Selected tasks will be highlighted with a purple background.
+  </Step>
+  
+  <Step title="Copy to Clipboard">
+    Once you've selected at least one task, the **"📋 Copy Selected Tasks"** button will be enabled.
+    
+    Click it to copy the formatted tasks to your clipboard:
+    
+    ```
+    1. Implement user authentication - IQ-1234
+    2. Fix login page responsiveness - IQ-1235
+    3. Add password reset functionality - IQ-1236
+    ```
+    
+    You should see a confirmation:
+    
+    ```
+    Copied X task(s) to clipboard!
+    ```
+  </Step>
+  
+  <Step title="Paste in Git Commit">
+    Open your terminal and create a Git commit:
+    
+    ```bash
+    git commit -m "Sprint tasks completed
+    
+    1. Implement user authentication - IQ-1234
+    2. Fix login page responsiveness - IQ-1235
+    3. Add password reset functionality - IQ-1236"
+    ```
+    
+    Or paste into your Git GUI of choice!
+  </Step>
+</Steps>
+
+## Understanding the Code
+
+The extension works by:
+
+1. **Content Script** (`content.js`) - Runs on `sprints.zoho.in` pages and has access to your authenticated session
+2. **API Request** - Constructs a URL using your configuration and sends a request:
+
+```javascript
+const url = `https://sprints.zoho.in/zsapi/team/${config.teamId}/projects/${config.projectId}/sprints/${sprintId}/item/?groupby=11&subitem=false&sortby=12&isascending=true&laneid=${config.doneLaneId}&lanefilter=%7B%22I-owner%22%3A%5B%22${config.ownerId}%22%5D%7D&range=50&action=data&index=1`;
+```
+
+3. **Task Parsing** - Extracts task information from the response:
+
+```javascript
+for (let obj in items) {
+  allTasks.push({
+    id: obj,
+    taskName: `${items[obj][0]}`,
+    taskId: `IQ-${items[obj][1]}`,
+    completedDate: items[obj][15],
+  });
+}
+```
+
+4. **Formatting** - Formats selected tasks with numbering:
+
+```javascript
+const selectedTasksList = Array.from(selectedTasks)
+  .sort((a, b) => a - b)
+  .map((index, serialNumber) => {
+    const task = allTasks[index];
+    return `${serialNumber + 1}. ${task.taskName} - ${task.taskId}`;
+  });
+```
+
+## Troubleshooting
 
 <AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
+  <Accordion title="No tasks found">
+    Possible causes:
+    - You don't have any completed tasks in this sprint
+    - Your Owner ID is incorrect (not matching your user)
+    - The Done Lane ID doesn't match your project's "Done" lane
+    - The Sprint ID is wrong or from a different project
   </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
+  
+  <Accordion title="Error: Please configure your settings first">
+    One or more of the required settings (Team ID, Project ID, Owner ID, Done Lane ID) is missing. Open the Settings panel and ensure all fields are filled in.
+  </Accordion>
+  
+  <Accordion title="Extension must be used on sprints.zoho.in">
+    The extension can only fetch data when you're on a Zoho Sprints page. Navigate to `sprints.zoho.in` in the active tab before clicking the extension icon.
+  </Accordion>
+  
+  <Accordion title="HTTP error or invalid response">
+    This could mean:
+    - Your session expired (try refreshing the Zoho Sprints page)
+    - One of your IDs is incorrect
+    - Zoho's API structure changed (the extension uses unofficial APIs)
   </Accordion>
 </AccordionGroup>
 
-### Step 2: Deploy your changes
+## Next Steps
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+You're all set! Here are some tips for ongoing use:
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+- **Reuse Settings**: Your Team ID, Project ID, Owner ID, and Done Lane ID are saved permanently. You only need to change the Sprint ID for each new sprint.
+- **Team Sharing**: Share the extension folder with your team. Each person uses their own Owner ID to fetch their tasks.
+- **Regular Updates**: Check the Network tab occasionally to ensure the API structure hasn't changed.
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
+<Card title="Need Help?" icon="question">
+  If you encounter issues or have questions, check the extension's console logs (right-click the extension icon > "Inspect popup") for detailed debugging information.
 </Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
